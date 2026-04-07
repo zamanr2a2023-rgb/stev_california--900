@@ -34,16 +34,16 @@ class BookingsMeMeta {
   });
 
   factory BookingsMeMeta.fromJson(Map<String, dynamic> json) {
-    int _asInt(dynamic v, int fallback) {
+    int asInt(dynamic v, int fallback) {
       if (v is int) return v;
       if (v is num) return v.toInt();
       return int.tryParse(v?.toString() ?? '') ?? fallback;
     }
 
     return BookingsMeMeta(
-      total: _asInt(json['total'], 0),
-      page: _asInt(json['page'], 1),
-      limit: _asInt(json['limit'], 20),
+      total: asInt(json['total'], 0),
+      page: asInt(json['page'], 1),
+      limit: asInt(json['limit'], 20),
     );
   }
 }

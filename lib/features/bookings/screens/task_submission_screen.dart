@@ -344,7 +344,7 @@ class _TaskSubmissionScreenState extends State<TaskSubmissionScreen> {
   String _scheduledAtISO() {
     if (_date.isEmpty) return '';
     final timeHour = _time.contains('Morning') ? '10' : _time.contains('Noon') ? '13' : '16';
-    return '${_date}T${timeHour}:00:00.000Z';
+    return '${_date}T$timeHour:00:00.000Z';
   }
 
   Future<void> _submit() async {

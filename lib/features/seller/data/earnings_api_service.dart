@@ -150,7 +150,7 @@ class EarningsResponse {
         if (e is Map<String, dynamic>) {
           transactions.add(EarningsTransactionItem.fromJson(e));
         } else if (e is Map) {
-          transactions.add(EarningsTransactionItem.fromJson(Map<String, dynamic>.from(e as Map)));
+          transactions.add(EarningsTransactionItem.fromJson(Map<String, dynamic>.from(e)));
         }
       }
     }

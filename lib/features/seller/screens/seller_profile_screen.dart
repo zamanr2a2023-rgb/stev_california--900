@@ -362,7 +362,6 @@ import 'package:renizo/core/widgets/app_logo_button.dart';
 import 'package:renizo/features/auth/screens/login_screen.dart';
 import 'package:renizo/features/notifications/screens/notifications_screen.dart';
 import 'package:renizo/features/profile/screens/help_support_screen.dart';
-import 'package:renizo/features/profile/screens/payment_methods_screen.dart';
 import 'package:renizo/features/profile/screens/settings_screen.dart';
 
 import '../logic/provider_profile_logic.dart';

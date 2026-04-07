@@ -1,4 +1,5 @@
 /// Service structure for task submission – mirrors just_tsx_code serviceStructure.ts.
+library;
 
 class TaskSubSection {
   const TaskSubSection({required this.id, required this.name, this.basePrice});

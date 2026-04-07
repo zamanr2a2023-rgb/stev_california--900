@@ -73,10 +73,12 @@ class _BottomNavBarState extends ConsumerState<BottomNavBar> {
       } catch (_) {
         // ignore and fall back to selection
       }
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _selectedTown = null;
         _townChecked = true;
       });
+      }
       return;
     }
     try {
@@ -95,10 +97,12 @@ class _BottomNavBarState extends ConsumerState<BottomNavBar> {
         return;
       }
     } catch (_) {}
-    if (mounted) setState(() {
+    if (mounted) {
+      setState(() {
       _selectedTown = null;
       _townChecked = true;
     });
+    }
   }
 
   void _onTownSelected(Town town) {

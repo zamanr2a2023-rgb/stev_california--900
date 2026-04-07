@@ -45,4 +45,13 @@ class UserApi {
 
   // ✅ Booking price quote (customer)
   static final String bookingsQuote = "$api/bookings/quote";
+
+  // ✅ Cabinet requests (customer)
+  static final String cabinetRequests = "$api/cabinet-requests";
+  static final String cabinetRequestsMe = "$api/cabinet-requests/me";
+  static String cabinetRequestById(String id) => "$api/cabinet-requests/$id";
+  static String cabinetRequestAcceptQuote(String id) =>
+      "$api/cabinet-requests/$id/accept-quote";
+  static String cabinetRequestCancel(String id) =>
+      "$api/cabinet-requests/$id/cancel";
 }

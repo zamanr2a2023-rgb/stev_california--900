@@ -1177,12 +1177,14 @@ class _EmptyBookings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String msg = 'Your bookings will appear here';
-    if (activeFilter == 'pending')
+    if (activeFilter == 'pending') {
       msg = 'New booking requests will appear here';
+    }
     if (activeFilter == 'active') msg = 'Active jobs will appear here';
     if (activeFilter == 'completed') msg = 'Completed jobs will appear here';
-    if (activeFilter == 'cancelled')
+    if (activeFilter == 'cancelled') {
       msg = 'Cancelled bookings will appear here';
+    }
 
     final filterLabel = activeFilter == 'all' ? '' : activeFilter;
 

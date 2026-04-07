@@ -1,4 +1,5 @@
 /// API response models for chat – threads list and messages.
+library;
 
 class ApiChatThreadUser {
   const ApiChatThreadUser({

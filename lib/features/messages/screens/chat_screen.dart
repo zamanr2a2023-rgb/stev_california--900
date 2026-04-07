@@ -428,10 +428,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final lower = text.toLowerCase();
     final phone = RegExp(r'\+?\d{10,}|\d{3}[-.\s]?\d{3}[-.\s]?\d{4}');
     final email = RegExp(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}');
-    if (phone.hasMatch(text))
+    if (phone.hasMatch(text)) {
       return (isViolation: true, violationType: 'phone');
-    if (email.hasMatch(text))
+    }
+    if (email.hasMatch(text)) {
       return (isViolation: true, violationType: 'email');
+    }
     if (lower.contains('my number is') ||
         lower.contains('call me at') ||
         lower.contains('email me at')) {
@@ -496,8 +498,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (detection.isViolation) {
       setState(() {
         _showWarning = true;
-        if (detection.violationType != null)
+        if (detection.violationType != null) {
           _warningType = detection.violationType!;
+        }
       });
       _showContactWarningDialog();
       return;
