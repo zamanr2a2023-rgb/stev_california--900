@@ -42,7 +42,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _bookingReminders = true;
   bool _promotionalEmails = false;
   bool _darkMode = false;
-  String _language = 'English';
+  final String _language = 'English';
 
   static const Color _bgBlue = Color(0xFF2384F4);
 

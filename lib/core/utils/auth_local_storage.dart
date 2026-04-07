@@ -65,8 +65,9 @@ class AuthLocalStorage {
     final roleStr = p.getString(_keyUserRole);
     final phone = p.getString(_keyUserPhone);
     final avatar = p.getString(_keyUserAvatar);
-    if (id == null || email == null || name == null || roleStr == null)
+    if (id == null || email == null || name == null || roleStr == null) {
       return null;
+    }
     final role = roleStr == 'provider' ? UserRole.provider : UserRole.customer;
     return User(
       id: id,

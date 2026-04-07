@@ -4,10 +4,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:renizo/core/constants/color_control/all_color.dart';
 import 'package:renizo/core/models/town.dart';
 import 'package:renizo/features/bookings/screens/task_submission_screen.dart';
+import 'package:renizo/features/cabinet/screens/cabinet_request_screen.dart';
+import 'package:renizo/features/cabinet/logic/my_cabinet_requests_provider.dart';
 import 'package:renizo/features/home/logic/customer_home_logic.dart';
 import 'package:renizo/features/home/models/customer_home_models.dart';
 import 'package:renizo/features/home/widgets/customer_header.dart';
 import 'package:renizo/features/home/widgets/featured_providers.dart';
+import 'package:renizo/features/home/widgets/my_cabinet_section.dart';
 import 'package:renizo/features/home/widgets/service_categories.dart';
 import 'package:renizo/features/home/widgets/welcome_banner.dart';
 import 'package:renizo/features/notifications/screens/notifications_screen.dart';
@@ -15,7 +18,7 @@ import 'package:renizo/features/providers/screens/provider_public_profile_screen
 import 'package:renizo/features/town/screens/town_selection_screen.dart';
 
 /// Customer main home – fully API-driven via GET /customer/home?townId=.
-/// Header + WelcomeBanner → Create New Booking → Top Rated Providers → Services Available.
+/// Header + WelcomeBanner → Create New Booking → Requests Cabinet → Top 4 providers → My Cabinet → Services Available.
 /// All sections rendered from API response only – no dummy / hardcoded data.
 class CustomerHomeScreen extends ConsumerStatefulWidget {
   const CustomerHomeScreen({
@@ -91,6 +94,17 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+
+  void _onRequestsCabinet() {
+    if (!mounted) return;
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => CabinetRequestScreen(
+          selectedTownId: _townId,
         ),
       ),
     );
@@ -248,6 +262,7 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
             child: RefreshIndicator(
               onRefresh: () async {
                 ref.invalidate(customerHomeControllerProvider(townId));
+                ref.invalidate(myCabinetRequestsProvider);
               },
               color: _bg,
               child: CustomScrollView(
@@ -260,10 +275,14 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
                   // Create New Booking button
                   SliverToBoxAdapter(child: _buildCreateBookingButton()),
 
-                  // Top Rated Providers (API data – hidden when empty)
+                  // Cabinet request (POST /cabinet-requests)
+                  SliverToBoxAdapter(child: _buildRequestsCabinetButton()),
+
+                  // Top Rated Providers — show at most 4 (API data – hidden when empty)
                   SliverToBoxAdapter(
                     child: FeaturedProvidersWidget(
                       providers: data.topRatedProviders,
+                      maxCount: 4,
                       onSelectProvider: (p) {
                         widget.onSelectProvider?.call(p);
                         if (widget.onSelectProvider == null) {
@@ -282,6 +301,9 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
                       lightHeader: true,
                     ),
                   ),
+
+                  // My Cabinet (GET /cabinet-requests/me)
+                  const SliverToBoxAdapter(child: MyCabinetSection()),
 
                   // Services Available (API data – hidden when empty)
                   SliverToBoxAdapter(
@@ -353,6 +375,43 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
     );
   }
 
+  /// White pill CTA (image 1): navy icon + label, below Create New Booking.
+  Widget _buildRequestsCabinetButton() {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+      child: Material(
+        color: AllColor.white,
+        borderRadius: BorderRadius.circular(16.r),
+        elevation: 3,
+        shadowColor: Colors.black.withOpacity(0.1),
+        child: InkWell(
+          onTap: _onRequestsCabinet,
+          borderRadius: BorderRadius.circular(16.r),
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: 16.h),
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.kitchen_outlined, color: _createBtnBg, size: 24.sp),
+                SizedBox(width: 10.w),
+                Text(
+                  'Requests Cabinet',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
+                    color: _createBtnBg,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   // ── Loading skeleton ───────────────────────────────────────────────────
 
   Widget _buildLoadingSkeleton() {
@@ -369,15 +428,27 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
             ),
           ),
         ),
-        // Create booking button skeleton
+        // Create booking + cabinet buttons skeleton
         SliverToBoxAdapter(
-          child: Container(
-            margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-            height: 52.h,
-            decoration: BoxDecoration(
-              color: AllColor.white.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(16.r),
-            ),
+          child: Column(
+            children: [
+              Container(
+                margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 12.h),
+                height: 52.h,
+                decoration: BoxDecoration(
+                  color: AllColor.white.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+                height: 52.h,
+                decoration: BoxDecoration(
+                  color: AllColor.white.withOpacity(0.18),
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
+              ),
+            ],
           ),
         ),
         // Providers skeleton

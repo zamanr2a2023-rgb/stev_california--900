@@ -47,12 +47,12 @@ Future<BookingQuote> fetchBookingQuote({
     throw Exception(msg);
   }
   final data = decoded?['data'] as Map<String, dynamic>? ?? {};
-  int _int(dynamic v) =>
+  int asInt(dynamic v) =>
       v is int ? v : int.tryParse(v?.toString() ?? '0') ?? 0;
   return BookingQuote(
     currency: (data['currency'] ?? 'CAD').toString(),
-    totalCents: _int(data['totalCents']),
-    renizoFeeCents: _int(data['renizoFeeCents']),
-    providerPayoutCents: _int(data['providerPayoutCents']),
+    totalCents: asInt(data['totalCents']),
+    renizoFeeCents: asInt(data['renizoFeeCents']),
+    providerPayoutCents: asInt(data['providerPayoutCents']),
   );
 }

@@ -146,8 +146,9 @@ class _BookingCardState extends State<BookingCard>
                                   errorWidget: (_, __, ___) {
                                     WidgetsBinding.instance
                                         .addPostFrameCallback((_) {
-                                          if (mounted)
+                                          if (mounted) {
                                             setState(() => _imageError = true);
+                                          }
                                         });
                                     return Center(
                                       child: Text(

@@ -38,22 +38,22 @@ class UserMeModel {
     final stats = (data['stats'] as Map<String, dynamic>?) ?? {};
     final town = data['town'] as Map<String, dynamic>?;
 
-    int _toInt(dynamic v) =>
+    int toInt(dynamic v) =>
         v is int ? v : int.tryParse(v?.toString() ?? '0') ?? 0;
-    String _toStr(dynamic v) => (v ?? '').toString();
+    String toStr(dynamic v) => (v ?? '').toString();
 
     return UserMeModel(
-      id: _toStr(profile['_id']),
-      fullName: _toStr(profile['fullName']),
-      email: _toStr(profile['email']),
-      phone: _toStr(profile['phone']),
-      avatarUrl: _toStr(profile['avatarUrl']),
-      roleRaw: _toStr(profile['role']),
-      bookings: _toInt(stats['bookings']),
-      reviews: _toInt(stats['reviews']),
-      favorites: _toInt(stats['favorites']),
-      townId: town == null ? null : _toStr(town['_id']),
-      townName: town == null ? null : _toStr(town['name']),
+      id: toStr(profile['_id']),
+      fullName: toStr(profile['fullName']),
+      email: toStr(profile['email']),
+      phone: toStr(profile['phone']),
+      avatarUrl: toStr(profile['avatarUrl']),
+      roleRaw: toStr(profile['role']),
+      bookings: toInt(stats['bookings']),
+      reviews: toInt(stats['reviews']),
+      favorites: toInt(stats['favorites']),
+      townId: town == null ? null : toStr(town['_id']),
+      townName: town == null ? null : toStr(town['name']),
     );
   }
 
