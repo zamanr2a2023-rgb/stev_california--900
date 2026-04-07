@@ -1,4 +1,5 @@
 /// Town model – aligned with "just for confirm the color." domain/models.ts
+library;
 // class Town {
 //   const Town({
 //     required this.id,

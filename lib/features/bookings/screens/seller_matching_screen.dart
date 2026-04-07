@@ -753,8 +753,9 @@ class _ProviderCardState extends State<_ProviderCard> {
                                 WidgetsBinding.instance.addPostFrameCallback((
                                   _,
                                 ) {
-                                  if (mounted)
+                                  if (mounted) {
                                     setState(() => _imageError = true);
+                                  }
                                 });
                                 return Center(
                                   child: Text(

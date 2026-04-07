@@ -8,6 +8,7 @@
 ///     "services": [ ... ]
 ///   }
 /// }
+library;
 
 class SearchApiResponse {
   final String status;

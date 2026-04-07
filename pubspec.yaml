@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   get: ^4.7.2
   http: ^1.4.0
+  http_parser: ^4.1.2
   logger: ^2.6.0
   shared_preferences: ^2.5.3
   flutter_screenutil: ^5.9.3
@@ -48,6 +49,7 @@ dependencies:
   flutter_svg: ^2.2.2
   lucide_icons_flutter: ^3.1.9
   flutter_stripe: ^11.0.0
+  image_picker: ^1.1.2
 
   firebase_analytics: ^12.1.2
   firebase_core: ^4.4.0

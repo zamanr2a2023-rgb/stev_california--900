@@ -13,7 +13,6 @@ import 'package:renizo/features/seller/screens/seller_booking_details_screen.dar
 import 'package:renizo/features/messages/data/chat_api_service.dart';
 import 'package:renizo/features/messages/screens/chat_screen.dart';
 import 'package:renizo/features/notifications/screens/notifications_screen.dart';
-import 'package:renizo/features/seller/data/bookings_riverpod.dart';
 import 'package:renizo/features/seller/logic/seller_home_logic.dart';
 import 'package:renizo/features/seller/models/seller_bookings.dart';
 import 'package:renizo/features/seller/screens/seller_bookings_screen.dart';

@@ -10,6 +10,7 @@
 ///     "servicesAvailable": [ ... ]
 ///   }
 /// }
+library;
 
 class CustomerHomeResponse {
   final String status;

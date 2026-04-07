@@ -155,19 +155,19 @@ class BookingPriceApi {
   double get renizoFeeAmount => renizoFeeCents / 100.0;
 
   factory BookingPriceApi.fromJson(Map<String, dynamic> json) {
-    int _int(dynamic v) {
+    int asInt(dynamic v) {
       if (v is int) return v;
       if (v is num) return v.toInt();
       return int.tryParse(v?.toString() ?? '0') ?? 0;
     }
     return BookingPriceApi(
       currency: (json['currency'] ?? 'CAD').toString(),
-      basePriceCents: _int(json['basePriceCents']),
-      addonsTotalCents: _int(json['addonsTotalCents']),
-      totalCents: _int(json['totalCents']),
-      renizoFeePercent: _int(json['renizoFeePercent']),
-      renizoFeeCents: _int(json['renizoFeeCents']),
-      providerPayoutCents: _int(json['providerPayoutCents']),
+      basePriceCents: asInt(json['basePriceCents']),
+      addonsTotalCents: asInt(json['addonsTotalCents']),
+      totalCents: asInt(json['totalCents']),
+      renizoFeePercent: asInt(json['renizoFeePercent']),
+      renizoFeeCents: asInt(json['renizoFeeCents']),
+      providerPayoutCents: asInt(json['providerPayoutCents']),
     );
   }
 }

@@ -25,7 +25,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _loading = false;
-  bool _loginAsProvider = false;
+  final bool _loginAsProvider = false;
   String? _error;
 
   @override

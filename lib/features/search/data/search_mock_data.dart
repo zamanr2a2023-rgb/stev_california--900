@@ -1,4 +1,5 @@
 /// Search screen mock data – mirrors just_tsx_code mockData.ts (PROVIDERS, SERVICE_CATEGORIES with townIds).
+library;
 
 class SearchCategory {
   const SearchCategory({

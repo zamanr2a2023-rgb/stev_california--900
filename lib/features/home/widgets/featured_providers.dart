@@ -12,15 +12,22 @@ class FeaturedProvidersWidget extends StatelessWidget {
     required this.providers,
     required this.onSelectProvider,
     this.lightHeader = false,
+    /// When set, only the first [maxCount] providers are shown (e.g. top 4).
+    this.maxCount,
   });
 
   final List<ProviderCardModel> providers;
   final void Function(ProviderCardModel provider) onSelectProvider;
   final bool lightHeader;
+  final int? maxCount;
 
   @override
   Widget build(BuildContext context) {
     if (providers.isEmpty) return const SizedBox.shrink();
+
+    final visible = maxCount != null && providers.length > maxCount!
+        ? providers.sublist(0, maxCount!)
+        : providers;
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
@@ -56,8 +63,8 @@ class FeaturedProvidersWidget extends StatelessWidget {
             ),
           ),
           SizedBox(height: 16.h),
-          ...List.generate(providers.length, (index) {
-            final provider = providers[index];
+          ...List.generate(visible.length, (index) {
+            final provider = visible[index];
             return Padding(
               padding: EdgeInsets.only(bottom: 12.h),
               child: _ProviderCard(
