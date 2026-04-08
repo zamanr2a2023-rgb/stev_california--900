@@ -19,8 +19,11 @@ import 'package:renizo/features/seller/screens/seller_bookings_screen.dart';
 import 'package:renizo/features/seller/screens/seller_earnings_screen.dart';
 import 'package:renizo/features/seller/screens/seller_home_screen.dart';
 import 'package:renizo/features/messages/screens/messages_screen.dart';
+import 'package:renizo/features/seller/data/bookings_riverpod.dart';
 import 'package:renizo/features/seller/models/seller_job_item.dart';
 import 'package:renizo/features/seller/screens/seller_profile_screen.dart';
+import 'package:renizo/features/cabinet/screens/provider_cabinet_list_screen.dart';
+import 'package:renizo/features/cabinet/screens/provider_cabinet_detail_screen.dart';
 import 'package:renizo/features/seller/widgets/seller_bottom_nav_bar.dart';
 import 'package:renizo/features/town/logic/towns_logic.dart';
 import 'package:renizo/core/models/town.dart';
@@ -76,8 +79,9 @@ class ProviderAppScreen extends ConsumerStatefulWidget {
 
 class _ProviderAppScreenState extends ConsumerState<ProviderAppScreen> {
   int _activeTab = 0; // 0=home, 1=bookings, 2=messages, 3=earnings, 4=profile
-  String? _currentOverlay; // 'availability' | 'services' | 'pricing' | 'booking-details' | 'chat' | 'notifications'
+  String? _currentOverlay; // 'availability' | 'services' | 'pricing' | 'booking-details' | 'chat' | 'notifications' | 'cabinet-requests' | 'cabinet-detail'
   String? _selectedBookingId;
+  String? _selectedCabinetRequestId;
   String? _selectedChatId;
   String? _selectedThreadId; // from POST /chat/threads response _id
   final ChatApiService _chatApi = ChatApiService();
@@ -96,74 +100,15 @@ class _ProviderAppScreenState extends ConsumerState<ProviderAppScreen> {
     _loadBookings();
   }
 
+  /// Refreshes [providerMyBookingsProvider]. Home/bookings UIs read bookings from that API;
+  /// legacy lists stay empty (nav badge uses API counts in [build]).
   Future<void> _loadBookings() async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    ref.invalidate(providerMyBookingsProvider);
     if (!mounted) return;
     setState(() {
-      // Pending (3) – match design: Residential Cleaning x2, Grass Cutting; Feb 1, Feb 7; Terrace, Kitimat
-      _pendingRequests = [
-        SellerJobItem(
-          id: 'booking1',
-          status: BookingStatus.pending,
-          scheduledDate: '2026-02-01',
-          scheduledTime: '10:00',
-          customerName: 'Customer',
-          categoryName: 'Residential Cleaning',
-          townName: 'Terrace',
-          notes: 'Need regular house cleaning with window cleaning',
-        ),
-        SellerJobItem(
-          id: 'booking2',
-          status: BookingStatus.pending,
-          scheduledDate: '2026-02-07',
-          scheduledTime: '14:00',
-          customerName: 'Customer',
-          categoryName: 'Grass Cutting',
-          townName: 'Kitimat',
-          notes: 'Medium yard needs mowing with edge trimming and leaf cleanup',
-        ),
-        SellerJobItem(
-          id: 'booking3',
-          status: BookingStatus.pending,
-          scheduledDate: '2026-02-01',
-          scheduledTime: '16:00',
-          customerName: 'Customer',
-          categoryName: 'Residential Cleaning',
-          townName: 'Terrace',
-          notes: 'Deep cleaning needed including fridge and oven',
-        ),
-      ];
-      // Active (3) – confirmed/in-progress so tab counts match Pending (3), Active (3), Completed (0)
-      _upcomingJobs = [
-        SellerJobItem(
-          id: 'booking4',
-          status: BookingStatus.confirmed,
-          scheduledDate: '2026-02-02',
-          scheduledTime: '09:00',
-          customerName: 'Customer',
-          categoryName: 'Residential Cleaning',
-          townName: 'Terrace',
-        ),
-        SellerJobItem(
-          id: 'booking5',
-          status: BookingStatus.inProgress,
-          scheduledDate: '2026-02-03',
-          scheduledTime: '11:00',
-          customerName: 'Customer',
-          categoryName: 'Grass Cutting',
-          townName: 'Kitimat',
-        ),
-        SellerJobItem(
-          id: 'booking6',
-          status: BookingStatus.confirmed,
-          scheduledDate: '2026-02-05',
-          scheduledTime: '14:00',
-          customerName: 'Customer',
-          categoryName: 'Residential Cleaning',
-          townName: 'Terrace',
-        ),
-      ];
-      _allBookings = [..._pendingRequests, ..._upcomingJobs];
+      _pendingRequests = [];
+      _upcomingJobs = [];
+      _allBookings = [];
     });
   }
 
@@ -184,6 +129,7 @@ class _ProviderAppScreenState extends ConsumerState<ProviderAppScreen> {
       _selectedBookingId = null;
       _selectedChatId = null;
       _selectedThreadId = null;
+      _selectedCabinetRequestId = null;
     });
   }
 
@@ -335,12 +281,19 @@ class _ProviderAppScreenState extends ConsumerState<ProviderAppScreen> {
         'pricing',
         'booking-details',
         'chat',
-        'notifications'
+        'notifications',
+        'cabinet-requests',
+        'cabinet-detail',
       ].contains(_currentOverlay);
 
   @override
   Widget build(BuildContext context) {
     final showHeader = _currentOverlay != 'notifications';
+    final pendingNavBadge = ref.watch(providerMyBookingsProvider).when(
+          data: (d) => d.counts.pending,
+          loading: () => 0,
+          error: (_, __) => 0,
+        );
     return Scaffold(
       backgroundColor: _bgBlue,
       body: Column(
@@ -352,7 +305,7 @@ class _ProviderAppScreenState extends ConsumerState<ProviderAppScreen> {
           if (_showBottomNav) SellerBottomNavBar(
                 currentIndex: _activeTab,
                 onTabTap: _showTab,
-                pendingCount: _pendingRequests.length,
+                pendingCount: pendingNavBadge,
               ),
         ],
       ),
@@ -371,7 +324,7 @@ class _ProviderAppScreenState extends ConsumerState<ProviderAppScreen> {
         bottom: false,
         child: Row(
           children: [
-            AppLogoButton(size: 40),
+            AppLogoButton(size: 48),
             const Spacer(),
             IconButton(
               onPressed: () => _showOverlay('notifications'),
@@ -415,11 +368,15 @@ class _ProviderAppScreenState extends ConsumerState<ProviderAppScreen> {
         );
       case 1:
         return Container(
-          color: const Color(0xFFF9FAFB),
+          color: _bgBlue,
           child: SellerBookingsScreen(
             showAppBar: false,
             bookings: _allBookings,
             onSelectBooking: _onSelectJob,
+            onOpenCabinetRequests: () => setState(() {
+              _currentOverlay = 'cabinet-requests';
+              _selectedCabinetRequestId = null;
+            }),
           ),
         );
       case 2:
@@ -491,6 +448,26 @@ class _ProviderAppScreenState extends ConsumerState<ProviderAppScreen> {
         );
       case 'pricing':
         return _placeholderScreen('Pricing', 'Manage your rates', () => setState(() => _currentOverlay = null));
+      case 'cabinet-requests':
+        return ProviderCabinetListScreen(
+          onBack: _hideOverlay,
+          onSelectRequest: (id) => setState(() {
+            _selectedCabinetRequestId = id;
+            _currentOverlay = 'cabinet-detail';
+          }),
+        );
+      case 'cabinet-detail':
+        if (_selectedCabinetRequestId == null) return const SizedBox.shrink();
+        return ProviderCabinetDetailScreen(
+          requestId: _selectedCabinetRequestId!,
+          onBack: () => setState(() {
+            _currentOverlay = 'cabinet-requests';
+          }),
+          onOpenBooking: (bookingId) {
+            _hideOverlay();
+            _onSelectJob(bookingId);
+          },
+        );
       default:
         return _buildTabContent();
     }
@@ -556,11 +533,13 @@ class _ServiceCoverageScreenState extends ConsumerState<ServiceCoverageScreen> {
 
     return Container(
       color: const Color(0xFF1F84F6),
+      // Already below provider header + status bar; skip top SafeArea to avoid a large gap.
       child: SafeArea(
+        top: false,
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 96.h),
+              padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 96.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -623,11 +602,11 @@ class _ServiceCoverageScreenState extends ConsumerState<ServiceCoverageScreen> {
                       orElse: () => 'Loading...',
                     ),
                   ),
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 4.h),
                   servicesAsync.when(
                     loading: () => Center(
                       child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 32.h),
+                        padding: EdgeInsets.symmetric(vertical: 20.h),
                         child: const CircularProgressIndicator(color: Colors.white),
                       ),
                     ),
@@ -655,8 +634,8 @@ class _ServiceCoverageScreenState extends ConsumerState<ServiceCoverageScreen> {
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           crossAxisSpacing: 12.w,
-                          mainAxisSpacing: 12.h,
-                          childAspectRatio: 1.5,
+                          mainAxisSpacing: 10.h,
+                          mainAxisExtent: 96.h,
                         ),
                         itemBuilder: (context, index) {
                           final service = services[index];
@@ -938,89 +917,118 @@ class _CategoryCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.all(14.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
-          border: Border.all(color: selected ? const Color(0xFF3B82F6) : Colors.transparent, width: 1.4),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: EdgeInsets.all(10.w),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFE8F3FF),
-                shape: BoxShape.circle,
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
-              child: _ServiceIcon(iconUrl: service.iconUrl),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    service.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: const Color(0xFF1B2733)),
-                  ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    description,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 10.sp, height: 1.1, color: const Color(0xFF6B7280)),
+                  _CategoryLeadingIcon(iconUrl: service.iconUrl),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          service.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1B2733),
+                            height: 1.2,
+                          ),
+                        ),
+                        SizedBox(height: 3.h),
+                        Text(
+                          description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            height: 1.25,
+                            color: const Color(0xFF6B7280),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-            if (selected)
-              Container(
-                width: 24.w,
-                height: 24.w,
+          ),
+          if (selected)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                width: 22.w,
+                height: 22.w,
                 decoration: BoxDecoration(
                   color: const Color(0xFF3B82F6),
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                child: Icon(Icons.check, color: Colors.white, size: 16.sp),
+                child: Icon(Icons.check, color: Colors.white, size: 14.sp),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
 }
 
-class _ServiceIcon extends StatelessWidget {
-  const _ServiceIcon({required this.iconUrl});
+/// Same blue weight as [_AreaCard] pin; stays on the left of the text column.
+class _CategoryLeadingIcon extends StatelessWidget {
+  const _CategoryLeadingIcon({required this.iconUrl});
 
   final String iconUrl;
+
+  static const Color _blue = Color(0xFF3B82F6);
 
   @override
   Widget build(BuildContext context) {
     if (iconUrl.isEmpty) {
-      return Icon(Icons.home_repair_service_outlined, size: 20.sp, color: const Color(0xFF3B82F6));
+      return Icon(
+        Icons.home_repair_service_outlined,
+        size: 18.sp,
+        color: _blue,
+      );
     }
-
     return ClipRRect(
-      borderRadius: BorderRadius.circular(999.r),
+      borderRadius: BorderRadius.circular(6.r),
       child: Image.network(
         iconUrl,
-        width: 20.sp,
-        height: 20.sp,
+        width: 20.w,
+        height: 20.w,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Icon(Icons.home_repair_service_outlined, size: 20.sp, color: const Color(0xFF3B82F6)),
+        errorBuilder: (_, __, ___) => Icon(
+          Icons.home_repair_service_outlined,
+          size: 18.sp,
+          color: _blue,
+        ),
       ),
     );
   }

@@ -9,8 +9,9 @@ import 'package:renizo/features/seller/screens/provider_app_screen.dart';
 class AppLogoButton extends StatelessWidget {
   const AppLogoButton({
     super.key,
-    this.size = 36,
-    this.logoPath = 'assets/Renizo.png',
+    this.size = 46,
+   // this.logoPath = 'assets/Renizo.png',
+    this.logoPath ='assets/logoImage.png',
     this.onTap,
   });
 
@@ -42,7 +43,7 @@ class AppLogoButton extends StatelessWidget {
         child: Container(
           width: size.w,
           height: size.w,
-          padding: EdgeInsets.all(6.w),
+          padding: EdgeInsets.all(4.w),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.12),
             borderRadius: BorderRadius.circular(12.r),

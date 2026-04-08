@@ -1084,13 +1084,25 @@ class _SellerBookingDetailsScreenState extends ConsumerState<SellerBookingDetail
                           ),
                         ],
                       ),
-                      Text(
-                        '${booking.renizoFeePercent ?? 10}',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white.withOpacity(0.8),
-                        ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _formatPrice(currency, booking.renizoFeeDisplayAmount),
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                          ),
+                          Text(
+                            ' (${booking.renizoFeeDisplayPercent}%)',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: Colors.white.withOpacity(0.65),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

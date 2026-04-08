@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:renizo/core/constants/color_control/all_color.dart';
 import 'package:renizo/core/models/town.dart';
 import 'package:renizo/core/widgets/app_logo_button.dart';
 import 'package:renizo/features/bookings/data/bookings_mock_data.dart';
@@ -574,12 +573,21 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                     );
                                   },
                                 )
-                              : ListView(
-                                  physics: const AlwaysScrollableScrollPhysics(),
-                                  children: [
-                                    SizedBox(height: 400.h),
-                                    _buildEmptyState(),
-                                  ],
+                              : LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    return SingleChildScrollView(
+                                      physics:
+                                          const AlwaysScrollableScrollPhysics(),
+                                      child: ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                          minHeight: constraints.maxHeight,
+                                        ),
+                                        child: Center(
+                                          child: _buildEmptyState(),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                         ),
                       ),
@@ -643,50 +651,59 @@ class _MessagesScreenState extends State<MessagesScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80.w,
-              height: 80.h,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-              child: Icon(
-                Icons.chat_bubble_outline,
-                size: 40.sp,
-                color: const Color(0xFF9CA3AF),
-              ),
+    // On blue body: light icon tile + white copy for contrast.
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80.w,
+            height: 80.h,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(16.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            SizedBox(height: 16.h),
-            Text(
-              _searchQuery.isEmpty ? 'No messages yet' : 'No results found',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
-                color: AllColor.foreground,
-              ),
-              textAlign: TextAlign.center,
+            child: Icon(
+              Icons.chat_bubble_outline_rounded,
+              size: 40.sp,
+              color: const Color(0xFF64748B),
             ),
-            SizedBox(height: 8.h),
-            Text(
-              _searchQuery.isEmpty
-                  ? (_isProvider
-                      ? 'Customer messages will appear here'
-                      : 'Book a service to start chatting with providers')
-                  : 'Try searching with different keywords',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AllColor.mutedForeground,
-              ),
-              textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            _searchQuery.isEmpty ? 'No messages yet' : 'No results found',
+            style: TextStyle(
+              fontSize: 17.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              height: 1.25,
             ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 10.h),
+          Text(
+            _searchQuery.isEmpty
+                ? (_isProvider
+                    ? 'Customer messages will appear here'
+                    : 'Book a service to start chatting with providers')
+                : 'Try searching with different keywords',
+            style: TextStyle(
+              fontSize: 15.sp,
+              height: 1.4,
+              color: Colors.white.withValues(alpha: 0.9),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

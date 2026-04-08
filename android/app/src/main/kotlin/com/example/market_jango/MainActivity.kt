@@ -1,5 +1,6 @@
 package r2a.renizo
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// Stripe Payment Sheet / 3DS require FlutterFragmentActivity. See flutter_stripe README (Android).
+class MainActivity : FlutterFragmentActivity()

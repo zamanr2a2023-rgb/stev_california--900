@@ -35,19 +35,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  // ✅ label like screenshot
-  Widget _authLabel(String text) => Padding(
-    padding: EdgeInsets.only(bottom: 8.h),
-    child: Text(
-      text,
-      textAlign: TextAlign.start,
-      style: TextStyle(
-        fontSize: 12.sp,
-        fontWeight: FontWeight.w600,
-        color: AllColor.white,
-      ),
-    ),
-  );
+  // Full-width so labels align left (Column defaults to centering narrow children).
+  Widget _authLabel(String text) => SizedBox(
+        width: double.infinity,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: 8.h),
+          child: Text(
+            text,
+            textAlign: TextAlign.left,
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w600,
+              color: AllColor.white,
+            ),
+          ),
+        ),
+      );
 
   // ✅ input decoration like screenshot
   InputDecoration _authDecoration({
