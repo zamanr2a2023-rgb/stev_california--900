@@ -6,6 +6,7 @@ import 'package:renizo/core/constants/color_control/all_color.dart';
 import 'package:renizo/core/models/user.dart';
 import 'package:renizo/core/utils/auth_local_storage.dart';
 import 'package:renizo/features/auth/providers/auth_provider.dart';
+import 'package:renizo/features/auth/screens/login_screen.dart';
 import 'package:renizo/features/onboarding/screens/onboarding_slides_screen.dart';
 import 'package:renizo/features/seller/screens/provider_app_screen.dart';
 
@@ -99,6 +100,77 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
+  void _goToLogin() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(LoginScreen.routeName);
+    }
+  }
+
+  // Match [LoginScreen] field chrome.
+  Widget _authLabel(String text) => SizedBox(
+        width: double.infinity,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: 8.h),
+          child: Text(
+            text,
+            textAlign: TextAlign.left,
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w600,
+              color: AllColor.white,
+            ),
+          ),
+        ),
+      );
+
+  InputDecoration _authDecoration({
+    required String hint,
+    required IconData prefix,
+    Widget? suffix,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(
+        fontSize: 13.sp,
+        fontWeight: FontWeight.w500,
+        color: AllColor.mutedForeground,
+      ),
+      filled: true,
+      fillColor: AllColor.white,
+      prefixIcon: Icon(prefix, size: 18.sp, color: AllColor.mutedForeground),
+      suffixIcon: suffix,
+      contentPadding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 14.w),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14.r),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14.r),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14.r),
+        borderSide: BorderSide.none,
+      ),
+    );
+  }
+
+  Widget _fieldWrapper(Widget child) => Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: child,
+      );
+
   @override
   Widget build(BuildContext context) {
     final signupState = ref.watch(signupProvider);
@@ -109,32 +181,61 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         child: SingleChildScrollView(
           padding: EdgeInsets.all(24.w),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextButton.icon(
-                onPressed: () => context.pop(),
-                icon: Icon(Icons.arrow_back, color: AllColor.white, size: 20.sp),
-                label: Text('Back to Login', style: TextStyle(color: AllColor.white, fontSize: 14.sp)),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  onPressed: _goToLogin,
+                  icon: Icon(Icons.arrow_back_ios_new_rounded, color: AllColor.white, size: 22.sp),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.12),
+                  ),
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Container(
+                width: 96.w,
+                height: 96.h,
+                decoration: BoxDecoration(
+                  color: AllColor.white,
+                  borderRadius: BorderRadius.circular(24.r),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 12,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24.r),
+                  child: Image.asset(
+                    'assets/Renizo.png',
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
               SizedBox(height: 16.h),
-              Center(
-                child: Column(
-                  children: [
-                    Container(
-                      width: 80.w,
-                      height: 80.h,
-                      decoration: BoxDecoration(color: AllColor.white, borderRadius: BorderRadius.circular(24.r)),
-                      child: Icon(Icons.person_add, size: 40.sp, color: AllColor.primary),
-                    ),
-                    SizedBox(height: 16.h),
-                    Text('Create Account', style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold, color: AllColor.white)),
-                    SizedBox(height: 8.h),
-                    Text('Join our service marketplace', style: TextStyle(fontSize: 14.sp, color: AllColor.white.withOpacity(0.9))),
-                  ],
+              Text(
+                'Create Account',
+                style: TextStyle(
+                  fontSize: 28.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AllColor.white,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                'Join our service marketplace',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: AllColor.white.withOpacity(0.9),
                 ),
               ),
               SizedBox(height: 24.h),
-              Text('I want to:', style: TextStyle(fontSize: 14.sp, color: AllColor.white)),
+              _authLabel('I want to'),
               SizedBox(height: 8.h),
               Row(
                 children: [
@@ -162,31 +263,164 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               if (signupState.error != null) ...[
                 SizedBox(height: 16.h),
                 Container(
+                  width: double.infinity,
                   padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(color: AllColor.destructive.withOpacity(0.2), borderRadius: BorderRadius.circular(12.r)),
-                  child: Text(signupState.error!, style: TextStyle(fontSize: 14.sp, color: AllColor.white)),
+                  decoration: BoxDecoration(
+                    color: AllColor.destructive.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                      color: AllColor.destructive.withOpacity(0.5),
+                    ),
+                  ),
+                  child: Text(
+                    signupState.error!,
+                    style: TextStyle(fontSize: 14.sp, color: AllColor.white),
+                  ),
                 ),
               ],
-              SizedBox(height: 16.h),
-              _input('Full Name', _nameController, Icons.person),
-              SizedBox(height: 12.h),
-              _input('Email', _emailController, Icons.email, keyboardType: TextInputType.emailAddress),
-              SizedBox(height: 12.h),
-              _input('Phone', _phoneController, Icons.phone, keyboardType: TextInputType.phone),
-              SizedBox(height: 12.h),
-              _input('Password', _passwordController, Icons.lock, obscure: _obscurePassword, onSuffix: () => setState(() => _obscurePassword = !_obscurePassword)),
-              SizedBox(height: 12.h),
-              _input('Confirm Password', _confirmController, Icons.lock, obscure: true),
               SizedBox(height: 24.h),
+              _authLabel('Full Name'),
+              _fieldWrapper(
+                TextField(
+                  controller: _nameController,
+                  style: TextStyle(fontSize: 14.sp, color: AllColor.foreground),
+                  textCapitalization: TextCapitalization.words,
+                  decoration: _authDecoration(
+                    hint: 'Jane Doe',
+                    prefix: Icons.person_outline_rounded,
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              _authLabel('Email Address'),
+              _fieldWrapper(
+                TextField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  style: TextStyle(fontSize: 14.sp, color: AllColor.foreground),
+                  decoration: _authDecoration(
+                    hint: 'your@email.com',
+                    prefix: Icons.mail_outline_rounded,
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              _authLabel('Phone'),
+              _fieldWrapper(
+                TextField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  style: TextStyle(fontSize: 14.sp, color: AllColor.foreground),
+                  decoration: _authDecoration(
+                    hint: '(555) 000-0000',
+                    prefix: Icons.phone_outlined,
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              _authLabel('Password'),
+              _fieldWrapper(
+                TextField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  style: TextStyle(fontSize: 14.sp, color: AllColor.foreground),
+                  decoration: _authDecoration(
+                    hint: '••••••••••',
+                    prefix: Icons.lock_outline_rounded,
+                    suffix: IconButton(
+                      splashRadius: 18.r,
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_rounded
+                            : Icons.visibility_rounded,
+                        size: 18.sp,
+                        color: AllColor.mutedForeground,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              _authLabel('Confirm Password'),
+              _fieldWrapper(
+                TextField(
+                  controller: _confirmController,
+                  obscureText: true,
+                  style: TextStyle(fontSize: 14.sp, color: AllColor.foreground),
+                  decoration: _authDecoration(
+                    hint: '••••••••••',
+                    prefix: Icons.lock_outline_rounded,
+                  ),
+                ),
+              ),
+              SizedBox(height: 32.h),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: signupState.isLoading ? null : _register,
-                  style: FilledButton.styleFrom(backgroundColor: AllColor.white, foregroundColor: AllColor.primary, padding: EdgeInsets.symmetric(vertical: 16.h), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r))),
-                  child: signupState.isLoading ? SizedBox(height: 24.h, width: 24.w, child: CircularProgressIndicator(strokeWidth: 2, color: AllColor.primary)) : Text('Create Account', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AllColor.white,
+                    foregroundColor: AllColor.primary,
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                  ),
+                  child: signupState.isLoading
+                      ? SizedBox(
+                          height: 24.h,
+                          width: 24.w,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AllColor.primary,
+                          ),
+                        )
+                      : Text(
+                          'Create Account',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
-              SizedBox(height: 32.h),
+              SizedBox(height: 24.h),
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'Already have an account? ',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: AllColor.white.withOpacity(0.85),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _goToLogin,
+                    child: Text(
+                      'Login Now',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AllColor.white,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AllColor.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 24.h),
+              Text(
+                'Local services made professional',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: AllColor.white.withOpacity(0.7),
+                ),
+              ),
             ],
           ),
         ),
@@ -217,20 +451,4 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  Widget _input(String label, TextEditingController c, IconData icon, {bool obscure = false, VoidCallback? onSuffix, TextInputType? keyboardType}) {
-    return TextField(
-      controller: c,
-      obscureText: obscure,
-      keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: AllColor.mutedForeground),
-        suffixIcon: onSuffix != null ? IconButton(icon: Icon(Icons.visibility, color: AllColor.mutedForeground), onPressed: onSuffix) : null,
-        filled: true,
-        fillColor: AllColor.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r)),
-      ),
-      style: TextStyle(fontSize: 16.sp, color: AllColor.foreground),
-    );
-  }
 }

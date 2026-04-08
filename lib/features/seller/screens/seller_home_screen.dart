@@ -1,4 +1,3 @@
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -176,7 +175,8 @@ class SellerHomeScreen extends ConsumerWidget {
             'https://i.pravatar.cc/300?u=${Uri.encodeComponent(providerName)}';
 
         final bookingsData = bookingsAsync.asData?.value;
-        final bookingItems = bookingsData?.items ?? const <ProviderBookingItem>[];
+        final bookingItems =
+            bookingsData?.items ?? const <ProviderBookingItem>[];
         final apiJobs = bookingItems.map(_toSellerJobItem).toList();
 
         final pendingJobs = apiJobs
@@ -300,6 +300,10 @@ class _SellerHomeContentState extends State<SellerHomeContent> {
   }
 
   @override
+
+
+  //Welcome back item:
+
   Widget build(BuildContext context) {
     final providerName = widget.providerName;
     final providerAvatar = widget.providerAvatarUrl;
@@ -315,7 +319,7 @@ class _SellerHomeContentState extends State<SellerHomeContent> {
             // Hero
             Container(
               width: double.infinity,
-              padding: EdgeInsets.fromLTRB(16.w, 24.h, 16.w, 32.h),
+              padding: EdgeInsets.fromLTRB(16.w, 15.h, 16.w, 20.h),
               decoration: const BoxDecoration(color: _heroBlue),
               child: SafeArea(
                 top: false,
@@ -567,7 +571,7 @@ class _SellerHomeContentState extends State<SellerHomeContent> {
                         Container(
                           padding: EdgeInsets.symmetric(
                             horizontal: 16.w,
-                            vertical: 12.h,
+                            vertical: 10.h,
                           ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.1),
@@ -648,26 +652,15 @@ class _SellerHomeContentState extends State<SellerHomeContent> {
                     ),
                   ),
                   SizedBox(height: 12.h),
-                  Row(
-                    children: [
-                      _QuickActionCard(
-                        icon: Icons.location_on_outlined,
-                        title: 'Services',
-                        subtitle: 'Coverage areas',
-                        color: const Color(0xFF3B82F6),
-                        onTap: widget.onManageServices,
-                      ),
-                      // SizedBox(width: 12.w),
-                      // Expanded(
-                      //   child: _QuickActionCard(
-                      //     icon: Icons.attach_money,
-                      //     title: 'Pricing',
-                      //     subtitle: 'See the rates',
-                      //     color: const Color(0xFF5DD9C1),
-                      //     onTap: widget.onManagePricing,
-                      //   ),
-                      // ),
-                    ],
+                  SizedBox(
+                    width: double.infinity,
+                    child: _QuickActionCard(
+                      icon: Icons.location_on_outlined,
+                      title: 'Services',
+                      subtitle: 'Coverage areas',
+                      accentColor: const Color(0xFF60A5FA),
+                      onTap: widget.onManageServices,
+                    ),
                   ),
                 ],
               ),
@@ -675,7 +668,7 @@ class _SellerHomeContentState extends State<SellerHomeContent> {
 
             // Bookings List
             Padding(
-              padding: EdgeInsets.only(top: 16.h, bottom: 96.h),
+              padding: EdgeInsets.only(top: 12.h, bottom: 96.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -807,89 +800,89 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _QuickActionCard extends StatefulWidget {
+/// Frosted row-style tile; matches Performance / Availability strips on hero blue.
+class _QuickActionCard extends StatelessWidget {
   const _QuickActionCard({
     required this.icon,
     required this.title,
     required this.subtitle,
-    required this.color,
+    required this.accentColor,
     required this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
-  final Color color;
+  final Color accentColor;
   final VoidCallback onTap;
 
   @override
-  State<_QuickActionCard> createState() => _QuickActionCardState();
-}
-
-class _QuickActionCardState extends State<_QuickActionCard> {
-  bool _pressed = false;
-
-  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      onTap: widget.onTap,
-      child: AnimatedScale(
-        scale: _pressed ? 0.98 : 1.0,
-        duration: const Duration(milliseconds: 100),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 100),
-          padding: EdgeInsets.all(16.w),
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(16.r),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16.r),
+        splashColor: Colors.white.withValues(alpha: 0.14),
+        highlightColor: Colors.white.withValues(alpha: 0.06),
+        child: Ink(
           decoration: BoxDecoration(
-            color: _pressed ? const Color(0xFFF9FAFB) : Colors.white,
+            color: Colors.white.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: const Color(0xFFF3F4F6)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 6,
-                offset: const Offset(0, 1),
-              ),
-            ],
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.22),
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+          child: Row(
             children: [
               Container(
-                width: 40.w,
-                height: 40.w,
-                margin: EdgeInsets.only(bottom: 12.h),
+                width: 44.w,
+                height: 44.w,
                 decoration: BoxDecoration(
-                  color: widget.color,
+                  color: accentColor.withValues(alpha: 0.28),
                   borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: widget.color.withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 2),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.25),
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, size: 22.sp, color: Colors.white),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        height: 1.25,
+                        color: Colors.white.withValues(alpha: 0.72),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
-                child: Icon(widget.icon, size: 20.sp, color: Colors.white),
               ),
-              Text(
-                widget.title,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF111827),
-                ),
-              ),
-              SizedBox(height: 2.h),
-              Text(
-                widget.subtitle,
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  color: const Color(0xFF6B7280),
-                ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: Colors.white.withValues(alpha: 0.55),
+                size: 22.sp,
               ),
             ],
           ),

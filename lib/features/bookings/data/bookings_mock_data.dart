@@ -91,6 +91,18 @@ class BookingDetailsModel {
   final int? providerPayoutCents;
 }
 
+extension BookingDetailsRenizoFee on BookingDetailsModel {
+  /// Dollar amount: API fee when present, else [renizoFeePercent]% of total (default 10%).
+  double get renizoFeeDisplayAmount {
+    if (renizoFeeAmount != null && renizoFeeAmount! > 0) return renizoFeeAmount!;
+    if (renizoFeeCents != null && renizoFeeCents! > 0) return renizoFeeCents! / 100.0;
+    final total = totalAmount ?? basePriceAmount ?? 0;
+    return total * ((renizoFeePercent ?? 10) / 100.0);
+  }
+
+  int get renizoFeeDisplayPercent => renizoFeePercent ?? 10;
+}
+
 enum PaymentStatus { unpaid, paidInApp, paidOutside }
 
 /// Mock load: returns display bookings for customer (mirrors AppService.getBookingsByCustomer + transform).

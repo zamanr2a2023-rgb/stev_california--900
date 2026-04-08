@@ -236,6 +236,7 @@ class _ServiceCardState extends State<_ServiceCard>
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w500,
                       color: const Color(0xFF111827),
+                      //color:Colors.red
                     ),
                   ),
                 ],

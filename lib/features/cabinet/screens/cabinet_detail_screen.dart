@@ -1,11 +1,28 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:renizo/core/constants/api_control/global_api.dart' show api;
 import 'package:renizo/core/constants/color_control/all_color.dart';
 import 'package:renizo/features/bookings/screens/booking_details_screen.dart';
 import 'package:renizo/features/cabinet/data/cabinet_requests_api.dart';
 import 'package:renizo/features/cabinet/logic/my_cabinet_requests_provider.dart';
 import 'package:renizo/features/cabinet/models/cabinet_request_detail_model.dart';
+
+/// Full URL for photo paths like `/uploads/...` from GET /cabinet-requests/:id.
+String _resolveCabinetPhotoUrl(String raw) {
+  final t = raw.trim();
+  if (t.isEmpty) return t;
+  final parsed = Uri.tryParse(t);
+  if (parsed != null &&
+      parsed.hasScheme &&
+      (parsed.scheme == 'http' || parsed.scheme == 'https')) {
+    return t;
+  }
+  final origin = Uri.parse(api).origin;
+  if (t.startsWith('/')) return '$origin$t';
+  return '$origin/$t';
+}
 
 /// `GET /cabinet-requests/:id` with accept quote + cancel per CABINET_REQUEST_POSTMAN_GUIDE.
 class CabinetDetailScreen extends ConsumerStatefulWidget {
@@ -470,19 +487,47 @@ class _CabinetDetailScreenState extends ConsumerState<CabinetDetailScreen> {
           if (d.photos.isNotEmpty) ...[
             SizedBox(height: 12.h),
             _label('Photos'),
-            Wrap(
-              spacing: 8.w,
-              runSpacing: 8.h,
-              children: d.photos
-                  .map(
-                    (url) => Chip(
-                      label: Text(
-                        Uri.tryParse(url)?.pathSegments.last ?? 'Photo',
-                        overflow: TextOverflow.ellipsis,
+            SizedBox(
+              height: 108.h,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: d.photos.length,
+                separatorBuilder: (_, __) => SizedBox(width: 10.w),
+                itemBuilder: (context, i) {
+                  final resolved = _resolveCabinetPhotoUrl(d.photos[i]);
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(12.r),
+                    child: SizedBox(
+                      width: 100.w,
+                      height: 100.h,
+                      child: CachedNetworkImage(
+                        imageUrl: resolved,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => Container(
+                          color: AllColor.white.withOpacity(0.2),
+                          alignment: Alignment.center,
+                          child: SizedBox(
+                            width: 24.w,
+                            height: 24.w,
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AllColor.white,
+                            ),
+                          ),
+                        ),
+                        errorWidget: (_, __, ___) => ColoredBox(
+                          color: AllColor.white.withOpacity(0.15),
+                          child: Icon(
+                            Icons.broken_image_outlined,
+                            color: AllColor.white.withOpacity(0.8),
+                            size: 32.sp,
+                          ),
+                        ),
                       ),
                     ),
-                  )
-                  .toList(),
+                  );
+                },
+              ),
             ),
           ],
           SizedBox(height: 20.h),

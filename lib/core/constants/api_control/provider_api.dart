@@ -47,5 +47,12 @@ class ProviderApi {
   static String get allTowns => "$api/towns/all";
   static String get createTown => "$api/towns";
   static String updateTown(String townId) => "$api/towns/$townId";
+
+  /// Provider cabinet queue (assigned requests only — backend filters).
+  static String get cabinetRequests => "$api/cabinet-requests";
+  static String cabinetRequestById(String id) => "$api/cabinet-requests/$id";
+  static String cabinetReviewStatus(String id) =>
+      "$api/cabinet-requests/$id/review-status";
+  static String cabinetQuote(String id) => "$api/cabinet-requests/$id/quote";
 }
 

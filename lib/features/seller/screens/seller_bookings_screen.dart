@@ -543,11 +543,16 @@ class SellerBookingsScreen extends ConsumerStatefulWidget {
     super.key,
     this.showAppBar = true,
     this.onSelectBooking,
-    required List<SellerJobItem> bookings,
+    this.onOpenCabinetRequests,
+    this.bookings = const [],
   });
 
   final bool showAppBar;
   final void Function(String bookingId)? onSelectBooking;
+  /// Opens provider cabinet queue (`GET /cabinet-requests`).
+  final VoidCallback? onOpenCabinetRequests;
+  /// Legacy; list uses [providerMyBookingsProvider] when empty.
+  final List<SellerJobItem> bookings;
 
   @override
   ConsumerState<SellerBookingsScreen> createState() =>
@@ -764,6 +769,96 @@ class _SellerBookingsScreenState extends ConsumerState<SellerBookingsScreen> {
               ),
             ),
 
+            if (widget.onOpenCabinetRequests != null)
+              Container(
+                width: double.infinity,
+                color: _BookingsColors.blueBg,
+                padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 12.h),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(14.r),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: widget.onOpenCabinetRequests,
+                    borderRadius: BorderRadius.circular(14.r),
+                    splashColor: _BookingsColors.tabBlue.withValues(alpha: 0.08),
+                    highlightColor: _BookingsColors.gray100,
+                    child: Ink(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14.r),
+                        border: Border.all(color: _BookingsColors.gray100),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 14.h,
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 44.w,
+                              height: 44.w,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF408AF1)
+                                    .withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(12.r),
+                              ),
+                              alignment: Alignment.center,
+                              child: Icon(
+                                Icons.kitchen_outlined,
+                                color: _BookingsColors.tabBlue,
+                                size: 24.sp,
+                              ),
+                            ),
+                            SizedBox(width: 14.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Kitchen cabinet requests',
+                                    style: TextStyle(
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: _BookingsColors.gray700,
+                                    ),
+                                  ),
+                                  SizedBox(height: 3.h),
+                                  Text(
+                                    'Quotes, site visits & workflow',
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      height: 1.25,
+                                      color: _BookingsColors.gray600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              color: _BookingsColors.gray500,
+                              size: 28.sp,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
             // Filter pills
             Container(
               width: double.infinity,
@@ -978,18 +1073,20 @@ class _BookingCard extends StatelessWidget {
                   ),
                   Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 4.h,
+                      horizontal: 10.w,
+                      vertical: 5.h,
                     ),
                     decoration: BoxDecoration(
                       color: statusBg,
-                      borderRadius: BorderRadius.circular(20.r),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(color: statusText.withOpacity(0.22)),
                     ),
                     child: Text(
                       statusLabel,
                       style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w500,
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
                         color: statusText,
                       ),
                     ),
@@ -1047,34 +1144,51 @@ class _BookingCard extends StatelessWidget {
               ),
               if (booking.notes != null && booking.notes!.isNotEmpty) ...[
                 SizedBox(height: 12.h),
-                Container(
-                  padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(
-                    color: _BookingsColors.gray50,
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.description_outlined,
-                        size: 16.sp,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Note',
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.4,
                         color: _BookingsColors.gray500,
                       ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: Text(
-                          booking.notes!,
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: _BookingsColors.gray700,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                    ),
+                    SizedBox(height: 6.h),
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(12.w),
+                      decoration: BoxDecoration(
+                        color: _BookingsColors.gray50,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(color: _BookingsColors.gray100),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.description_outlined,
+                            size: 16.sp,
+                            color: _BookingsColors.gray500,
+                          ),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: Text(
+                              booking.notes!,
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                color: _BookingsColors.gray700,
+                              ),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
               SizedBox(height: 12.h),
@@ -1249,40 +1363,53 @@ class _FilterPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? _BookingsColors.tabBlue : Colors.white,
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(999.r),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(999.r),
-        child: Container(
-          height: 34.h,
+        splashColor: Colors.white.withValues(alpha: 0.18),
+        highlightColor: Colors.white.withValues(alpha: 0.08),
+        child: Ink(
+          height: 36.h,
           padding: EdgeInsets.symmetric(horizontal: 14.w),
-          alignment: Alignment.center,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                  color: selected ? Colors.white : _BookingsColors.tabBlue,
+          decoration: BoxDecoration(
+            color: selected
+                ? _BookingsColors.tabBlue
+                : Colors.white.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(999.r),
+            border: Border.all(
+              color: selected
+                  ? _BookingsColors.tabBlue
+                  : Colors.white.withValues(alpha: 0.45),
+              width: 1,
+            ),
+          ),
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              if (count > 0) ...[
-                SizedBox(width: 6.w),
+                SizedBox(width: 5.w),
                 Text(
                   '($count)',
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w600,
-                    color: selected
-                        ? Colors.white.withOpacity(0.85)
-                        : _BookingsColors.tabBlue,
+                    color: Colors.white.withValues(alpha: 0.88),
                   ),
                 ),
               ],
-            ],
+            ),
           ),
         ),
       ),

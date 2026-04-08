@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,25 +69,64 @@ class _CabinetRequestScreenState extends ConsumerState<CabinetRequestScreen> {
   /// UI only — no dropdown; `serviceId` still comes from catalog for the API.
   static const String _kStaticServiceLabel = 'Kitchen cabinet';
 
-  bool get _isValid {
-    if (widget.selectedTownId.isEmpty || _serviceId.isEmpty) return false;
-    if (_phoneCtrl.text.trim().isEmpty) return false;
-    if (_line1Ctrl.text.trim().isEmpty ||
-        _cityCtrl.text.trim().isEmpty ||
-        _postalCtrl.text.trim().isEmpty) {
-      return false;
-    }
-    if (_styleChoice == 'Other' && _styleOtherCtrl.text.trim().isEmpty) {
-      return false;
-    }
-    if (_photos.length < _kMinPhotos || _photos.length > _kMaxPhotos) {
-      return false;
-    }
-    return true;
-  }
-
   String get _resolvedStyle =>
       _styleChoice == 'Other' ? _styleOtherCtrl.text.trim() : _styleChoice;
+
+  /// Ordered messages for missing/invalid required fields.
+  List<String> _collectValidationErrors() {
+    final errs = <String>[];
+    if (widget.selectedTownId.isEmpty) {
+      errs.add('Select a town from the home screen first.');
+    }
+    if (_serviceId.isEmpty) {
+      errs.add(
+        'Kitchen cabinet service is not ready. Check your connection or try again.',
+      );
+    }
+    if (_phoneCtrl.text.trim().isEmpty) {
+      errs.add('Enter your phone number.');
+    }
+    if (_line1Ctrl.text.trim().isEmpty) {
+      errs.add('Enter visit address (line 1).');
+    }
+    if (_cityCtrl.text.trim().isEmpty) {
+      errs.add('Enter city.');
+    }
+    if (_postalCtrl.text.trim().isEmpty) {
+      errs.add('Enter postal code.');
+    }
+    if (_styleChoice == 'Other' && _styleOtherCtrl.text.trim().isEmpty) {
+      errs.add('Describe the cabinet style (Other).');
+    }
+    if (_photos.length < _kMinPhotos) {
+      errs.add(
+        'Add at least $_kMinPhotos photo${_kMinPhotos == 1 ? '' : 's'} (required).',
+      );
+    } else if (_photos.length > _kMaxPhotos) {
+      errs.add('Remove photos — maximum $_kMaxPhotos allowed.');
+    }
+    return errs;
+  }
+
+  void _onSubmitPressed() {
+    if (_submitting) return;
+    final errs = _collectValidationErrors();
+    if (errs.isNotEmpty) {
+      final msg = errs.length == 1
+          ? errs.first
+          : 'Please complete the following:\n${errs.map((e) => '• $e').join('\n')}';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          duration: const Duration(seconds: 5),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: const Color(0xFFB91C1C),
+        ),
+      );
+      return;
+    }
+    _submit();
+  }
 
   @override
   void initState() {
@@ -234,8 +274,225 @@ class _CabinetRequestScreenState extends ConsumerState<CabinetRequestScreen> {
     setState(() => _photos.clear());
   }
 
+  void _removePhotoAt(int index) {
+    if (index < 0 || index >= _photos.length) return;
+    setState(() => _photos.removeAt(index));
+  }
+
+  Future<void> _openAddonsPicker() async {
+    final temp = Set<String>.from(_selectedAddonIds);
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final maxH = MediaQuery.sizeOf(ctx).height * 0.72;
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.viewPaddingOf(ctx).bottom,
+              ),
+              child: Container(
+                height: maxH,
+                decoration: BoxDecoration(
+                  color: AllColor.white,
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(20.r)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.12),
+                      blurRadius: 16,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(height: 10.h),
+                    Center(
+                      child: Container(
+                        width: 36.w,
+                        height: 4.h,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE5E7EB),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 6.h),
+                      child: Text(
+                        'Add-ons',
+                        style: TextStyle(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w700,
+                          color: AllColor.foreground,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: Text(
+                        'Select any that apply. Optional.',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          color: AllColor.mutedForeground,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Expanded(
+                      child: ListView.separated(
+                        padding: EdgeInsets.fromLTRB(8.w, 0, 8.w, 8.h),
+                        itemCount: kCabinetStaticAddons.length,
+                        separatorBuilder: (_, __) => Divider(
+                          height: 1,
+                          color: Colors.grey.shade200,
+                        ),
+                        itemBuilder: (context, i) {
+                          final a = kCabinetStaticAddons[i];
+                          final checked = temp.contains(a.value);
+                          return CheckboxListTile(
+                            value: checked,
+                            onChanged: (v) {
+                              setModalState(() {
+                                if (v == true) {
+                                  temp.add(a.value);
+                                } else {
+                                  temp.remove(a.value);
+                                }
+                              });
+                            },
+                            title: Text(
+                              a.label,
+                              style: TextStyle(
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w500,
+                                color: AllColor.foreground,
+                              ),
+                            ),
+                            subtitle: Text(
+                              a.value,
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: AllColor.mutedForeground,
+                              ),
+                            ),
+                            activeColor: _buttonBlue,
+                            checkColor: AllColor.white,
+                            controlAffinity:
+                                ListTileControlAffinity.trailing,
+                          );
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 16.h),
+                      child: FilledButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedAddonIds
+                              ..clear()
+                              ..addAll(temp);
+                          });
+                          Navigator.pop(ctx);
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _buttonBlue,
+                          foregroundColor: AllColor.white,
+                          padding: EdgeInsets.symmetric(vertical: 14.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14.r),
+                          ),
+                        ),
+                        child: Text(
+                          'Done',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildAddonsDropdownRow() {
+    final n = _selectedAddonIds.length;
+    final labels = kCabinetStaticAddons
+        .where((a) => _selectedAddonIds.contains(a.value))
+        .map((a) => a.label)
+        .toList();
+    var preview = labels.join(', ');
+    if (preview.length > 72) {
+      preview = '${preview.substring(0, 69)}…';
+    }
+
+    return Material(
+      color: AllColor.white,
+      borderRadius: BorderRadius.circular(12.r),
+      child: InkWell(
+        onTap: _openAddonsPicker,
+        borderRadius: BorderRadius.circular(12.r),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      n == 0
+                          ? 'Tap to choose add-ons'
+                          : '$n selected',
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w500,
+                        color: n == 0
+                            ? AllColor.mutedForeground
+                            : AllColor.foreground,
+                      ),
+                    ),
+                    if (n > 0) ...[
+                      SizedBox(height: 4.h),
+                      Text(
+                        preview,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          height: 1.3,
+                          color: AllColor.mutedForeground,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: AllColor.mutedForeground,
+                size: 26.sp,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _submit() async {
-    if (!_isValid || _submitting) return;
+    if (_submitting) return;
     setState(() => _submitting = true);
     try {
       final photoParts = <CabinetPhotoPart>[];
@@ -408,48 +665,14 @@ class _CabinetRequestScreenState extends ConsumerState<CabinetRequestScreen> {
                   SizedBox(height: 16.h),
                   _fieldLabel('Add-ons'),
                   Text(
-                    'Optional — values match API (e.g. soft_close, hardware).',
+                    'Optional. Tap the row below to open the list.',
                     style: TextStyle(
                       fontSize: 12.sp,
                       color: AllColor.white.withOpacity(0.85),
                     ),
                   ),
                   SizedBox(height: 8.h),
-                  ...kCabinetStaticAddons.map((a) {
-                    final checked = _selectedAddonIds.contains(a.value);
-                    return CheckboxListTile(
-                      value: checked,
-                      onChanged: (v) {
-                        setState(() {
-                          if (v == true) {
-                            _selectedAddonIds.add(a.value);
-                          } else {
-                            _selectedAddonIds.remove(a.value);
-                          }
-                        });
-                      },
-                      title: Text(
-                        a.label,
-                        style: TextStyle(
-                          color: AllColor.white,
-                          fontSize: 14.sp,
-                        ),
-                      ),
-                      subtitle: Text(
-                        a.value,
-                        style: TextStyle(
-                          color: AllColor.white.withOpacity(0.65),
-                          fontSize: 11.sp,
-                        ),
-                      ),
-                      activeColor: AllColor.white,
-                      checkColor: _buttonBlue,
-                      tileColor: AllColor.white.withOpacity(0.12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    );
-                  }),
+                  _buildAddonsDropdownRow(),
                   SizedBox(height: 8.h),
                   _fieldLabel('Photos (required)'),
                   Text(
@@ -460,14 +683,18 @@ class _CabinetRequestScreenState extends ConsumerState<CabinetRequestScreen> {
                     ),
                   ),
                   SizedBox(height: 8.h),
+                  if (_photos.isNotEmpty) ...[
+                    _buildPhotoThumbnailsRow(),
+                    SizedBox(height: 12.h),
+                  ],
                   OutlinedButton.icon(
-                    onPressed: _pickPhotos,
+                    onPressed: _photos.length >= _kMaxPhotos ? null : _pickPhotos,
                     icon: const Icon(Icons.photo_library_outlined,
                         color: AllColor.white),
                     label: Text(
                       _photos.isEmpty
                           ? 'Add photos'
-                          : '${_photos.length} / $_kMaxPhotos photo(s)',
+                          : 'Add more (${_photos.length} / $_kMaxPhotos)',
                       style: const TextStyle(color: AllColor.white),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -481,7 +708,7 @@ class _CabinetRequestScreenState extends ConsumerState<CabinetRequestScreen> {
                       child: TextButton(
                         onPressed: _clearPhotos,
                         child: Text(
-                          'Clear photos',
+                          'Clear all photos',
                           style: TextStyle(
                             fontSize: 13.sp,
                             color: AllColor.white.withOpacity(0.95),
@@ -497,9 +724,7 @@ class _CabinetRequestScreenState extends ConsumerState<CabinetRequestScreen> {
                     color: _buttonBlue,
                     borderRadius: BorderRadius.circular(16.r),
                     child: InkWell(
-                      onTap: townMissing || !_isValid || _submitting
-                          ? null
-                          : _submit,
+                      onTap: _submitting ? null : _onSubmitPressed,
                       borderRadius: BorderRadius.circular(16.r),
                       child: Container(
                         width: double.infinity,
@@ -620,6 +845,127 @@ class _CabinetRequestScreenState extends ConsumerState<CabinetRequestScreen> {
         ),
         onChanged: (_) => setState(() {}),
       ),
+    );
+  }
+
+  /// Horizontal thumbnails — uses bytes so `content://` paths work on Android.
+  Widget _buildPhotoThumbnailsRow() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${_photos.length} / $_kMaxPhotos selected',
+          style: TextStyle(
+            fontSize: 12.sp,
+            color: AllColor.white.withOpacity(0.9),
+          ),
+        ),
+        SizedBox(height: 8.h),
+        SizedBox(
+          height: 104.h,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _photos.length,
+            separatorBuilder: (_, __) => SizedBox(width: 10.w),
+            itemBuilder: (context, index) {
+              return _CabinetPhotoThumb(
+                key: ValueKey<Object>(_photos[index].path + index.toString()),
+                file: _photos[index],
+                onRemove: () => _removePhotoAt(index),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CabinetPhotoThumb extends StatefulWidget {
+  const _CabinetPhotoThumb({
+    super.key,
+    required this.file,
+    required this.onRemove,
+  });
+
+  final XFile file;
+  final VoidCallback onRemove;
+
+  @override
+  State<_CabinetPhotoThumb> createState() => _CabinetPhotoThumbState();
+}
+
+class _CabinetPhotoThumbState extends State<_CabinetPhotoThumb> {
+  Uint8List? _bytes;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.file.readAsBytes().then((b) {
+      if (mounted) setState(() => _bytes = b);
+    }).catchError((_) {
+      if (mounted) setState(() => _failed = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12.r),
+          child: Container(
+            width: 96.w,
+            height: 96.h,
+            color: AllColor.white.withOpacity(0.15),
+            child: _failed
+                ? Icon(
+                    Icons.broken_image_outlined,
+                    color: AllColor.white.withOpacity(0.8),
+                    size: 32.sp,
+                  )
+                : _bytes == null
+                    ? Center(
+                        child: SizedBox(
+                          width: 24.w,
+                          height: 24.w,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AllColor.white,
+                          ),
+                        ),
+                      )
+                    : Image.memory(
+                        _bytes!,
+                        fit: BoxFit.cover,
+                        width: 96.w,
+                        height: 96.h,
+                      ),
+          ),
+        ),
+        Positioned(
+          top: -2,
+          right: -2,
+          child: Material(
+            color: Colors.black.withOpacity(0.55),
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: widget.onRemove,
+              child: Padding(
+                padding: EdgeInsets.all(5.w),
+                child: Icon(
+                  Icons.close_rounded,
+                  size: 16.sp,
+                  color: AllColor.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

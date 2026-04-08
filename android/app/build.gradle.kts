@@ -47,4 +47,6 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // Required by flutter_stripe (AppCompat theme + Payment Sheet). See package README Android section.
+    implementation("androidx.appcompat:appcompat:1.7.0")
 }

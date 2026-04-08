@@ -119,8 +119,49 @@ class _CabinetRow extends StatelessWidget {
 
   static const Color _navy = Color(0xFF003E93);
 
+  /// Pill colors for cabinet request status (matches common badge patterns).
+  static ({Color bg, Color fg, Color border}) _statusColors(String status) {
+    final s = status.toLowerCase();
+    if (s.contains('cancel')) {
+      return (
+        bg: const Color(0xFFFEE2E2),
+        fg: const Color(0xFF991B1B),
+        border: const Color(0xFFFECACA),
+      );
+    }
+    if (s.contains('convert')) {
+      return (
+        bg: const Color(0xFFD1FAE5),
+        fg: const Color(0xFF065F46),
+        border: const Color(0xFFA7F3D0),
+      );
+    }
+    if (s.contains('submit') || s.contains('pending')) {
+      return (
+        bg: const Color(0xFFDBEAFE),
+        fg: const Color(0xFF1E40AF),
+        border: const Color(0xFFBFDBFE),
+      );
+    }
+    if (s.contains('review') || s.contains('visit') || s.contains('quote')) {
+      return (
+        bg: const Color(0xFFFFF7ED),
+        fg: const Color(0xFFC2410C),
+        border: const Color(0xFFFED7AA),
+      );
+    }
+    return (
+      bg: const Color(0xFFF1F5F9),
+      fg: const Color(0xFF334155),
+      border: const Color(0xFFE2E8F0),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final c = _statusColors(item.status);
+    final hasNote = item.notes != null && item.notes!.trim().isNotEmpty;
+
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h),
       child: Material(
@@ -140,18 +181,41 @@ class _CabinetRow extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        item.status.replaceAll('_', ' ').toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w700,
-                          color: _navy,
-                          letterSpacing: 0.3,
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                        decoration: BoxDecoration(
+                          color: c.bg,
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: Border.all(color: c.border, width: 1),
+                        ),
+                        child: Text(
+                          item.status.replaceAll('_', ' ').toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w700,
+                            color: c.fg,
+                            letterSpacing: 0.4,
+                            height: 1.1,
+                          ),
                         ),
                       ),
+                      if (hasNote) ...[
+                        SizedBox(height: 10.h),
+                        Text(
+                          item.notes!.trim(),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w600,
+                            color: _navy,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
                       if (item.timeline != null &&
                           item.timeline!.isNotEmpty) ...[
-                        SizedBox(height: 6.h),
+                        SizedBox(height: hasNote ? 8.h : 10.h),
                         Text(
                           item.timeline!,
                           style: TextStyle(
